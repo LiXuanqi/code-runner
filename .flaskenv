@@ -1,0 +1,2 @@
+FLASK_APP=coderunner
+FLASK_ENV=development
