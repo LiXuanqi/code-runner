@@ -24,8 +24,9 @@ def test_hello(client):
 
 
 def test_run_python(client):
-    rv = client.post('/run/python', json={
+    rv = client.post('/run', json={
+        'language': 'python',
         'code': 'print("Hello")'
     })
     json_data = rv.get_json()
-    assert json_data['result'] == '"Hello"'
+    assert json_data['result'] == "Hello\n"

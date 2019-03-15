@@ -11,8 +11,8 @@ class Example {
     }
 }
     """)
-    assert result['result'] == b'Hello world from java!!!\n'
+    assert result['result'] == 'Hello world from java!!!\n'
 
 def test_python():
     result = python_runner.run("print('Hello world from python!!!')")
-    assert result['result'] == b'Hello world from python!!!\n'
+    assert result['result'] == 'Hello world from python!!!\n'

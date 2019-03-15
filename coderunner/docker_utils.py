@@ -44,6 +44,6 @@ def run_docker(image, command):
             },
             working_dir=GUEST_DIR
         )
-        return True, log
+        return True, log.decode("utf-8")
     except ContainerError as e:
-        return False, e.stderr
+        return False, e.stderr.decode("utf-8")
