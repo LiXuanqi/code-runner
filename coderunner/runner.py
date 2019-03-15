@@ -2,15 +2,10 @@ from collections import namedtuple
 
 import docker
 from docker.errors import ContainerError
-import os
+
+from .docker_utils import run_docker, TEMP_DIR
 
 client = docker.from_env()
-
-CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
-TEMP_DIR = "%s/tmp" % CURRENT_DIR
-HOST_DIR = TEMP_DIR
-GUEST_DIR = '/test'
-SOURCE_FILE_NAME = "Example"
 
 Language = namedtuple('Language', 'source_file execute_file build_command run_command docker_image')
 
@@ -29,44 +24,30 @@ class Runner:
         # - write code to file.
         write_code_to_file(code, lang.source_file)
 
+        # - compile
         if lang.build_command:
-            # - compile
-            try:
-                client.containers.run(
-                    image=lang.docker_image,
-                    command="%s %s" % (lang.build_command, lang.source_file),
-                    volumes={
-                        HOST_DIR: {
-                            'bind': GUEST_DIR,
-                            'mode': 'rw',
-                            'auto_remove': True
-                        }
-                    },
-                    working_dir=GUEST_DIR
-                )
-            except ContainerError as e:
-                print(e.stderr)
+            command = "%s %s" % (lang.build_command, lang.source_file)
+            build_success, build_log = run_docker(lang.docker_image, command)
+
+            if not build_success:
+                return {
+                    'err': build_log,
+                }
+
         # - run
-        try:
-            log = client.containers.run(
-                image=lang.docker_image,
-                command="%s %s" % (lang.run_command, lang.execute_file),
-                volumes={
-                    HOST_DIR: {
-                        'bind': GUEST_DIR,
-                        'mode': 'rw',
-                        'auto_remove': True
-                    }
-                },
-                working_dir=GUEST_DIR
-            )
-            print(log)
-            return log
-        except ContainerError as e:
-            print(e.stderr)
+        command = "%s %s" % (lang.run_command, lang.execute_file)
+        run_success, run_log = run_docker(lang.docker_image, command)
+
+        if not run_success:
+            return {
+                'err': run_log
+            }
+        else:
+            return {
+                'result': run_log
+            }
 
 
 def write_code_to_file(code, filename):
     file = open("%s/%s" % (TEMP_DIR, filename), "w")  # Create a new file if it does not exist.
     file.write(code)
-
