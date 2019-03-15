@@ -1,6 +1,5 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import os
-
 
 def create_app(test_config=None):
     # create and configure the app
@@ -30,6 +29,8 @@ def create_app(test_config=None):
 
     @app.route('/run/python', methods=['POST'])
     def run_python():
-        return request.form
+        body = request.get_json()
+        result = exec(body['code'])
+        return jsonify(result=result)
 
     return app
